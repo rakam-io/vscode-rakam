@@ -130,5 +130,5 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "node ./node_modules/vscode/bin/test",
 		"vscode:prepublish": "tsc -p ./ --outDir ./out"
-	},
+	}
 }
