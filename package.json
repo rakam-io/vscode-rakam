@@ -1,11 +1,31 @@
 {
+	"displayName": "Rakam Data Modeling",
+	"homepage": "https://github.com/rakam/vscode-rakam/blob/master/README.md",
+	"icon": "./images/square.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rakam/vscode-rakam.git"
+	},
+	"name": "rakam-data-modeling",
+	"preview": true,
+	"keywords": [
+		"data-modeling",
+		"analytics",
+		"business-intelligence",
+		"lookml",
+		"looker"
+	],
+	"version": "0.1.0",
+	"publisher": "rakam",
+	"license": "SEE LICENSE IN 'LICENSE' file",
 	"activationEvents": [
 		"onLanguage:jsonnet",
 		"onCommand:jsonnet.previewToSide",
 		"onCommand:jsonnet.preview"
 	],
 	"categories": [
-		"Languages"
+		"Programming Languages",
+		"Language Packs"
 	],
 	"contributes": {
 		"jsonValidation": [
@@ -100,19 +120,10 @@
 		"typescript": "^2.3.2",
 		"vscode": "^1.1.36"
 	},
-	"displayName": "Rakam Data Modeling",
 	"engines": {
 		"vscode": "^1.25.x"
 	},
-	"homepage": "https://github.com/rakam/vscode-rakam/blob/master/README.md",
-	"license": "SEE LICENSE IN 'LICENSE' file",
 	"main": "./out/client/extension",
-	"name": "rakam-data-modeling",
-	"publisher": "rakam",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/rakam/vscode-rakam.git"
-	},
 	"scripts": {
 		"compile": "tsc -watch -p ./ --outDir ./out",
 		"compile-once": "tsc -p ./ --outDir ./out",
@@ -120,5 +131,4 @@
 		"test": "node ./node_modules/vscode/bin/test",
 		"vscode:prepublish": "tsc -p ./ --outDir ./out"
 	},
-	"version": "0.1.0"
 }
