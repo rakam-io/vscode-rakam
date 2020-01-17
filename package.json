@@ -1,7 +1,7 @@
 {
 	"displayName": "Rakam Data Modeling",
 	"homepage": "https://github.com/rakam/vscode-rakam/blob/master/README.md",
-	"icon": "./images/square.png",
+	"icon": "images/square.png",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/rakam/vscode-rakam.git"
