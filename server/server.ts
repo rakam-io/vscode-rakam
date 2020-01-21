@@ -29,12 +29,10 @@ const compiler = new local.VsCompilerService();
 const libResolver = new local.VsPathResolver();
 const documentManager = new local.VsDocumentManager(docs, libResolver);
 
-const analyzer: _static.EventedAnalyzer = new _static.Analyzer(
-  documentManager, compiler);
+const analyzer: _static.EventedAnalyzer = new _static.Analyzer(documentManager, compiler);
 
 const reportDiagnostics = (doc: server.TextDocument) => {
-  const text = doc.getText();
-  const results = compiler.cache(doc.uri, text, doc.version);
+  const results = compiler.cache(doc.uri, doc.getText(), doc.version);
 
   if (_static.isParsedDocument(results)) {
     connection.sendDiagnostics({
@@ -72,7 +70,7 @@ docs.onDidSave(saveEvent => {
   const doc = saveEvent.document;
   if (doc.languageId === "jsonnet") {
     reportDiagnostics(doc);
-    return analyzer.onDocumentOpen(doc.uri, doc.getText(), doc.version);
+    return analyzer.onDocumentSave(doc.uri, doc.getText(), doc.version);
   }
 });
 docs.onDidClose(closeEvent => {
@@ -163,28 +161,28 @@ const positionToLocation = (
 const completionInfoToCompletionItem = (
   completionInfo: editor.CompletionInfo
 ): server.CompletionItem => {
-    let kindMapping: server.CompletionItemKind;
-    switch (completionInfo.kind) {
-      case "Field": {
-        kindMapping = server.CompletionItemKind.Field;
-        break;
-      }
-      case "Variable": {
-        kindMapping = server.CompletionItemKind.Variable;
-        break;
-      }
-      case "Method": {
-        kindMapping = server.CompletionItemKind.Method;
-        break;
-      }
-      default: throw new Error(
-        `Unrecognized completion type '${completionInfo.kind}'`);
+  let kindMapping: server.CompletionItemKind;
+  switch (completionInfo.kind) {
+    case "Field": {
+      kindMapping = server.CompletionItemKind.Field;
+      break;
     }
+    case "Variable": {
+      kindMapping = server.CompletionItemKind.Variable;
+      break;
+    }
+    case "Method": {
+      kindMapping = server.CompletionItemKind.Method;
+      break;
+    }
+    default: throw new Error(
+      `Unrecognized completion type '${completionInfo.kind}'`);
+  }
 
-    // Black magic type coercion. This allows us to avoid doing a
-    // deep copy over to a new `CompletionItem` object, and
-    // instead only re-assign the `kindMapping`.
-    const completionItem = (<server.CompletionItem>(<object>completionInfo));
-    completionItem.kind = kindMapping;
-    return completionItem;
+  // Black magic type coercion. This allows us to avoid doing a
+  // deep copy over to a new `CompletionItem` object, and
+  // instead only re-assign the `kindMapping`.
+  const completionItem = (<server.CompletionItem>(<object>completionInfo));
+  completionItem.kind = kindMapping;
+  return completionItem;
 }

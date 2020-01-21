@@ -6,6 +6,7 @@ import * as im from 'immutable';
 import * as editor from '../../editor';
 import * as lexical from '../lexical';
 import * as _static from '../../static';
+import { VisitorBase } from './visitor';
 
 // ---------------------------------------------------------------------------
 
@@ -17,10 +18,10 @@ export const envFromLocalBinds = (
   local: Local | ObjectField | FunctionParam
 ): Environment => {
   if (isLocal(local)) {
-    const defaultLocal: {[key: string]: LocalBind} = {};
+    const defaultLocal: { [key: string]: LocalBind } = {};
     const binds = local.binds
       .reduce(
-        (acc: {[key: string]: LocalBind}, bind: LocalBind) => {
+        (acc: { [key: string]: LocalBind }, bind: LocalBind) => {
           acc[bind.variable.name] = bind;
           return acc;
         },
@@ -77,25 +78,25 @@ export const envFromFields = (
 
 export const renderAsJson = (node: Node): string => {
   return "```\n" + JSON.stringify(
-  node,
-  (k, v) => {
-    if (k === "parent") {
-      return v == null
-        ? "null"
-        : (<Node>v).type;
-    } else if (k === "env") {
-      return v == null
-        ? "null"
-        : `${Object.keys(v).join(", ")}`;
-    } else if (k === "rootObject") {
-      return v == null
-        ? "null"
-        : (<Node>v).type;
-    } else {
-      return v;
-    }
-  },
-  "  ") + "\n```";
+    node,
+    (k, v) => {
+      if (k === "parent") {
+        return v == null
+          ? "null"
+          : (<Node>v).type;
+      } else if (k === "env") {
+        return v == null
+          ? "null"
+          : `${Object.keys(v).join(", ")}`;
+      } else if (k === "rootObject") {
+        return v == null
+          ? "null"
+          : (<Node>v).type;
+      } else {
+        return v;
+      }
+    },
+    "  ") + "\n```";
 }
 
 // ---------------------------------------------------------------------------
@@ -159,8 +160,8 @@ export const isValueType = (node: Node): boolean => {
 // ---------------------------------------------------------------------------
 
 export interface Node {
-  readonly type:     NodeKind
-  readonly loc:      lexical.LocationRange
+  readonly type: NodeKind
+  readonly loc: lexical.LocationRange
 
   prettyPrint(): string
 
@@ -175,8 +176,8 @@ export type Nodes = im.List<Node>
 // to the public because it is meant to be a transparent base blass
 // for all `Node` implementations.
 abstract class NodeBase implements Node {
-  readonly type:     NodeKind
-  readonly loc:      lexical.LocationRange
+  readonly type: NodeKind
+  readonly loc: lexical.LocationRange
 
   constructor() {
     this.rootObject = null;
@@ -203,9 +204,9 @@ export const isNode = (thing): thing is Node => {
 // Jsonnet file the symbol occurs in.
 export class Resolve {
   constructor(
-    public readonly fileUri:  editor.FileUri,
+    public readonly fileUri: editor.FileUri,
     public readonly value: Node | IndexedObjectFields,
-  ) {}
+  ) { }
 }
 
 export const isResolve = (thing): thing is Resolve => {
@@ -219,11 +220,11 @@ export const isResolve = (thing): thing is Resolve => {
 // `libPaths` for it if necessary. This "context" is carried along in
 // this object.
 export class ResolutionContext {
-  constructor (
+  constructor(
     public readonly compiler: _static.LexicalAnalyzerService,
     public readonly documents: editor.DocumentManager,
     public readonly currFile: editor.FileUri,
-  ) {}
+  ) { }
 
   public withUri = (currFile: editor.FileUri): ResolutionContext => {
     return new ResolutionContext(this.compiler, this.documents, currFile);
@@ -268,12 +269,12 @@ export type IdentifierName = string
 export type IdentifierNames = im.List<IdentifierName>
 export type IdentifierSet = im.Set<IdentifierName>;
 
-export class Identifier extends NodeBase  {
+export class Identifier extends NodeBase {
   readonly type: "IdentifierNode" = "IdentifierNode";
 
   constructor(
     readonly name: IdentifierName,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -326,11 +327,11 @@ export const isComment = (node: Node): node is Comment => {
 
 export class CppComment extends NodeBase implements Comment {
   readonly type: "CommentNode" = "CommentNode";
-  readonly kind: "CppStyle"    = "CppStyle";
+  readonly kind: "CppStyle" = "CppStyle";
 
   constructor(
     readonly text: im.List<string>,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -344,11 +345,11 @@ export const isCppComment = (node): node is CppComment => {
 
 export class CComment extends NodeBase implements Comment {
   readonly type: "CommentNode" = "CommentNode";
-  readonly kind: "CStyle"    = "CStyle";
+  readonly kind: "CStyle" = "CStyle";
 
   constructor(
     readonly text: im.List<string>,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -362,11 +363,11 @@ export const isCComment = (node): node is CComment => {
 
 export class HashComment extends NodeBase implements Comment {
   readonly type: "CommentNode" = "CommentNode";
-  readonly kind: "HashStyle"    = "HashStyle";
+  readonly kind: "HashStyle" = "HashStyle";
 
   constructor(
     readonly text: im.List<string>,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -385,10 +386,10 @@ export type CompKind =
   "CompIf";
 
 export interface CompSpec extends Node {
-  readonly type:    "CompSpecNode"
-  readonly kind:    CompKind
+  readonly type: "CompSpecNode"
+  readonly kind: CompKind
   readonly varName: Identifier | null // null when kind != compSpecFor
-  readonly expr:    Node
+  readonly expr: Node
 };
 export type CompSpecs = im.List<CompSpec>;
 
@@ -398,13 +399,13 @@ export const isCompSpec = (node: Node): node is CompSpec => {
 }
 
 export class CompSpecIf extends NodeBase implements CompSpec {
-  readonly type:    "CompSpecNode" = "CompSpecNode";
-  readonly kind:    "CompIf"       = "CompIf";
+  readonly type: "CompSpecNode" = "CompSpecNode";
+  readonly kind: "CompIf" = "CompIf";
   readonly varName: Identifier | null = null // null when kind != compSpecFor
 
   constructor(
     readonly expr: Node,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -417,13 +418,13 @@ export const isCompSpecIf = (node): node is CompSpec => {
 }
 
 export class CompSpecFor extends NodeBase implements CompSpec {
-  readonly type:    "CompSpecNode" = "CompSpecNode";
-  readonly kind:    "CompFor"      = "CompFor";
+  readonly type: "CompSpecNode" = "CompSpecNode";
+  readonly kind: "CompFor" = "CompFor";
 
   constructor(
     readonly varName: Identifier, // null for `CompSpecIf`
-    readonly expr:    Node,
-    readonly loc:  lexical.LocationRange,
+    readonly expr: Node,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -442,11 +443,11 @@ export class Apply extends NodeBase implements TypeGuessResolvable {
   readonly type: "ApplyNode" = "ApplyNode";
 
   constructor(
-    readonly target:        Node,
-    readonly args:          Nodes,
+    readonly target: Node,
+    readonly args: Nodes,
     readonly trailingComma: boolean,
-    readonly tailStrict:    boolean,
-    readonly loc:           lexical.LocationRange,
+    readonly tailStrict: boolean,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -490,9 +491,9 @@ export class ApplyParamAssignment extends NodeBase {
   readonly type: "ApplyParamAssignmentNode" = "ApplyParamAssignmentNode";
 
   constructor(
-    readonly id:    IdentifierName,
+    readonly id: IdentifierName,
     readonly right: Node,
-    readonly loc:   lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -512,9 +513,9 @@ export class ApplyBrace extends NodeBase {
   readonly type: "ApplyBraceNode" = "ApplyBraceNode";
 
   constructor(
-    readonly left:  Node,
+    readonly left: Node,
     readonly right: Node,
-    readonly loc:   lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -533,11 +534,11 @@ export class Array extends NodeBase {
   readonly type: "ArrayNode" = "ArrayNode";
 
   constructor(
-    readonly elements:        Nodes,
-    readonly trailingComma:   boolean,
-    readonly headingComment:  Comment | null,
+    readonly elements: Nodes,
+    readonly trailingComma: boolean,
+    readonly headingComment: Comment | null,
     readonly trailingComment: Comment | null,
-    readonly loc:             lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -560,10 +561,10 @@ export class ArrayComp extends NodeBase {
   readonly type: "ArrayCompNode" = "ArrayCompNode";
 
   constructor(
-    readonly body:          Node,
+    readonly body: Node,
     readonly trailingComma: boolean,
-    readonly specs:         CompSpecs,
-    readonly loc:           lexical.LocationRange,
+    readonly specs: CompSpecs,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -588,10 +589,10 @@ export class Assert extends NodeBase {
   readonly type: "AssertNode" = "AssertNode";
 
   constructor(
-    readonly cond:    Node,
+    readonly cond: Node,
     readonly message: Node | null,
-    readonly rest:    Node,
-    readonly loc:     lexical.LocationRange,
+    readonly rest: Node,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -632,30 +633,30 @@ export type BinaryOp =
   "BopOr";
 
 const BopStrings = {
-  BopMult:    "*",
-  BopDiv:     "/",
+  BopMult: "*",
+  BopDiv: "/",
   BopPercent: "%",
 
-  BopPlus:  "+",
+  BopPlus: "+",
   BopMinus: "-",
 
   BopShiftL: "<<",
   BopShiftR: ">>",
 
-  BopGreater:   ">",
+  BopGreater: ">",
   BopGreaterEq: ">=",
-  BopLess:      "<",
-  BopLessEq:    "<=",
+  BopLess: "<",
+  BopLessEq: "<=",
 
-  BopManifestEqual:   "==",
+  BopManifestEqual: "==",
   BopManifestUnequal: "!=",
 
   BopBitwiseAnd: "&",
   BopBitwiseXor: "^",
-  BopBitwiseOr:  "|",
+  BopBitwiseOr: "|",
 
   BopAnd: "&&",
-  BopOr:  "||",
+  BopOr: "||",
 };
 
 export const BopMap = im.Map<string, BinaryOp>({
@@ -669,9 +670,9 @@ export const BopMap = im.Map<string, BinaryOp>({
   "<<": "BopShiftL",
   ">>": "BopShiftR",
 
-  ">":  "BopGreater",
+  ">": "BopGreater",
   ">=": "BopGreaterEq",
-  "<":  "BopLess",
+  "<": "BopLess",
   "<=": "BopLessEq",
 
   "==": "BopManifestEqual",
@@ -690,10 +691,10 @@ export class Binary extends NodeBase implements FieldsResolvable {
   readonly type: "BinaryNode" = "BinaryNode";
 
   constructor(
-    readonly left:  Node,
-    readonly op:    BinaryOp,
+    readonly left: Node,
+    readonly op: BinaryOp,
     readonly right: Node,
-    readonly loc:     lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -755,9 +756,9 @@ export class Builtin extends NodeBase {
   readonly type: "BuiltinNode" = "BuiltinNode";
 
   constructor(
-    readonly id:     number,
+    readonly id: number,
     readonly params: IdentifierNames,
-    readonly loc:    lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -780,10 +781,10 @@ export class Conditional extends NodeBase {
   readonly type: "ConditionalNode" = "ConditionalNode";
 
   constructor(
-    readonly cond:        Node,
-    readonly branchTrue:  Node,
+    readonly cond: Node,
+    readonly branchTrue: Node,
     readonly branchFalse: Node | null,
-    readonly loc:    lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -806,7 +807,7 @@ export class Dollar extends NodeBase implements Resolvable {
   readonly type: "DollarNode" = "DollarNode";
 
   constructor(
-    readonly loc:    lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -833,7 +834,7 @@ export class ErrorNode extends NodeBase {
 
   constructor(
     readonly expr: Node,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -852,12 +853,12 @@ export class Function extends NodeBase {
   readonly type: "FunctionNode" = "FunctionNode";
 
   constructor(
-    readonly parameters:      FunctionParams,
-    readonly trailingComma:   boolean,
-    readonly body:            Node,
-    readonly headingComment:  BindingComment,
+    readonly parameters: FunctionParams,
+    readonly trailingComma: boolean,
+    readonly body: Node,
+    readonly headingComment: BindingComment,
     readonly trailingComment: Comments,
-    readonly loc:             lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -876,9 +877,9 @@ export class FunctionParam extends NodeBase {
   readonly type: "FunctionParamNode" = "FunctionParamNode";
 
   constructor(
-    readonly id:           IdentifierName,
+    readonly id: IdentifierName,
     readonly defaultValue: Node | null,
-    readonly loc:             lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -902,7 +903,7 @@ export class Import extends NodeBase implements Resolvable {
 
   constructor(
     readonly file: string,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -910,7 +911,7 @@ export class Import extends NodeBase implements Resolvable {
   }
 
   public resolve = (context: ResolutionContext): Resolve | ResolveFailure => {
-    const {text: docText, version: version, resolvedPath: fileUri} =
+    const { text: docText, version: version, resolvedPath: fileUri } =
       context.documents.get(this);
     const cached =
       context.compiler.cache(fileUri, docText, version);
@@ -943,7 +944,7 @@ export class ImportStr extends NodeBase {
 
   constructor(
     readonly file: string,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -962,10 +963,10 @@ export const isImportStr = (node): node is ImportStr => {
 // One of index and id will be nil before desugaring.  After desugaring id
 // will be nil.
 export interface Index extends Node, Resolvable {
-  readonly type:   "IndexNode"
+  readonly type: "IndexNode"
   readonly target: Node
-  readonly index:  Node | null
-  readonly id:     Identifier | null
+  readonly index: Node | null
+  readonly id: Identifier | null
 }
 
 const resolveIndex = (
@@ -1017,13 +1018,13 @@ export const isIndex = (node: Node): node is Index => {
 }
 
 export class IndexSubscript extends NodeBase implements Index {
-  readonly type: "IndexNode"        = "IndexNode";
-  readonly id:    Identifier | null = null;
+  readonly type: "IndexNode" = "IndexNode";
+  readonly id: Identifier | null = null;
 
   constructor(
     readonly target: Node,
-    readonly index:  Node,
-    readonly loc:    lexical.LocationRange,
+    readonly index: Node,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1039,13 +1040,13 @@ export const isIndexSubscript = (node): node is Index => {
 }
 
 export class IndexDot extends NodeBase implements Index {
-  readonly type:  "IndexNode" = "IndexNode";
+  readonly type: "IndexNode" = "IndexNode";
   readonly index: Node | null = null;
 
   constructor(
     readonly target: Node,
-    readonly id:     Identifier,
-    readonly loc:    lexical.LocationRange,
+    readonly id: Identifier,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1067,12 +1068,12 @@ export class LocalBind extends NodeBase {
   readonly type: "LocalBindNode" = "LocalBindNode";
 
   constructor(
-    readonly variable:      Identifier,
-    readonly body:          Node,
+    readonly variable: Identifier,
+    readonly body: Node,
     readonly functionSugar: boolean,
-    readonly params:        FunctionParams, // if functionSugar is true
+    readonly params: FunctionParams, // if functionSugar is true
     readonly trailingComma: boolean,
-    readonly loc:           lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1098,8 +1099,8 @@ export class Local extends NodeBase {
 
   constructor(
     readonly binds: LocalBinds,
-    readonly body:  Node,
-    readonly loc:  lexical.LocationRange,
+    readonly body: Node,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1123,7 +1124,7 @@ export class LiteralBoolean extends NodeBase {
 
   constructor(
     readonly value: boolean,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1142,7 +1143,7 @@ export class LiteralNull extends NodeBase {
   readonly type: "LiteralNullNode" = "LiteralNullNode";
 
   constructor(
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1161,9 +1162,9 @@ export class LiteralNumber extends NodeBase {
   readonly type: "LiteralNumberNode" = "LiteralNumberNode";
 
   constructor(
-    readonly value:          number,
+    readonly value: number,
     readonly originalString: string,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1184,9 +1185,9 @@ export type LiteralStringKind =
 
 // LiteralString represents a JSON string
 export interface LiteralString extends Node {
-  readonly type:        "LiteralStringNode"
-  readonly value:       string
-  readonly kind:        LiteralStringKind
+  readonly type: "LiteralStringNode"
+  readonly value: string
+  readonly kind: LiteralStringKind
   readonly blockIndent: string
 }
 
@@ -1196,13 +1197,13 @@ export const isLiteralString = (node: Node): node is LiteralString => {
 }
 
 export class LiteralStringSingle extends NodeBase implements LiteralString {
-  readonly type:        "LiteralStringNode" = "LiteralStringNode";
-  readonly kind:        "StringSingle"      = "StringSingle";
-  readonly blockIndent: ""                  = "";
+  readonly type: "LiteralStringNode" = "LiteralStringNode";
+  readonly kind: "StringSingle" = "StringSingle";
+  readonly blockIndent: "" = "";
 
   constructor(
-    readonly value:       string,
-    readonly loc:  lexical.LocationRange,
+    readonly value: string,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1215,13 +1216,13 @@ export const isLiteralStringSingle = (node): node is LiteralStringSingle => {
 }
 
 export class LiteralStringDouble extends NodeBase implements LiteralString {
-  readonly type:        "LiteralStringNode" = "LiteralStringNode";
-  readonly kind:        "StringDouble"      = "StringDouble";
-  readonly blockIndent: ""                  = "";
+  readonly type: "LiteralStringNode" = "LiteralStringNode";
+  readonly kind: "StringDouble" = "StringDouble";
+  readonly blockIndent: "" = "";
 
   constructor(
-    readonly value:       string,
-    readonly loc:  lexical.LocationRange,
+    readonly value: string,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1235,12 +1236,12 @@ export const isLiteralStringDouble = (node): node is LiteralString => {
 
 export class LiteralStringBlock extends NodeBase implements LiteralString {
   readonly type: "LiteralStringNode" = "LiteralStringNode";
-  readonly kind: "StringBlock"       = "StringBlock";
+  readonly kind: "StringBlock" = "StringBlock";
 
   constructor(
-    readonly value:       string,
+    readonly value: string,
     readonly blockIndent: string,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1291,18 +1292,18 @@ export class ObjectField extends NodeBase {
   readonly type: "ObjectFieldNode" = "ObjectFieldNode";
 
   constructor(
-    readonly kind:            ObjectFieldKind,
-    readonly hide:            ObjectFieldHide, // (ignore if kind != astObjectField*)
-    readonly superSugar:      boolean,         // +:  (ignore if kind != astObjectField*)
-    readonly methodSugar:     boolean,         // f(x, y, z): ...  (ignore if kind  == astObjectAssert)
-    readonly expr1:           Node | null,     // Not in scope of the object
-    readonly id:              Identifier | null,
-    readonly ids:             FunctionParams,  // If methodSugar == true then holds the params.
-    readonly trailingComma:   boolean,         // If methodSugar == true then remembers the trailing comma
-    readonly expr2:           Node | null,     // In scope of the object (can see self).
-    readonly expr3:           Node | null,     // In scope of the object (can see self).
+    readonly kind: ObjectFieldKind,
+    readonly hide: ObjectFieldHide, // (ignore if kind != astObjectField*)
+    readonly superSugar: boolean,         // +:  (ignore if kind != astObjectField*)
+    readonly methodSugar: boolean,         // f(x, y, z): ...  (ignore if kind  == astObjectAssert)
+    readonly expr1: Node | null,     // Not in scope of the object
+    readonly id: Identifier | null,
+    readonly ids: FunctionParams,  // If methodSugar == true then holds the params.
+    readonly trailingComma: boolean,         // If methodSugar == true then remembers the trailing comma
+    readonly expr2: Node | null,     // In scope of the object (can see self).
+    readonly expr3: Node | null,     // In scope of the object (can see self).
     readonly headingComments: BindingComment,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1322,12 +1323,12 @@ export const isObjectField = (node): node is ObjectField => {
 }
 
 const prettyPrintObjectAssert = (field: ObjectField): string => {
-    if (field.expr2 == null) {
-      throw new Error(`INTERNAL ERROR: object 'assert' must have expression to assert:\n${renderAsJson(field)}`);
-    }
-    return field.expr3 == null
-      ? `assert ${field.expr2.prettyPrint()}`
-      : `assert ${field.expr2.prettyPrint()} : ${field.expr3.prettyPrint()}`;
+  if (field.expr2 == null) {
+    throw new Error(`INTERNAL ERROR: object 'assert' must have expression to assert:\n${renderAsJson(field)}`);
+  }
+  return field.expr3 == null
+    ? `assert ${field.expr2.prettyPrint()}`
+    : `assert ${field.expr2.prettyPrint()} : ${field.expr3.prettyPrint()}`;
 }
 
 const prettyPrintObjectFieldId = (field: ObjectField): string => {
@@ -1379,8 +1380,8 @@ export const indexFields = (fields: ObjectFields): IndexedObjectFields => {
     ) => {
       return field.id != null && acc.set(field.id.name, field) || acc;
     },
-    im.Map<string, ObjectField>()
-  );
+      im.Map<string, ObjectField>()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -1393,10 +1394,10 @@ export class ObjectNode extends NodeBase implements FieldsResolvable {
   readonly type: "ObjectNode" = "ObjectNode";
 
   constructor(
-    readonly fields:          ObjectFields,
-    readonly trailingComma:   boolean,
+    readonly fields: ObjectFields,
+    readonly trailingComma: boolean,
     readonly headingComments: BindingComment,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1434,9 +1435,9 @@ export type DesugaredObjectFields = im.List<DesugaredObjectField>;
 //
 // The assertions either return true or raise an error.
 export interface DesugaredObject extends NodeBase {
-  readonly type:    "DesugaredObjectNode"
+  readonly type: "DesugaredObjectNode"
   readonly asserts: Nodes
-  readonly fields:  DesugaredObjectFields
+  readonly fields: DesugaredObjectFields
 }
 
 export const isDesugaredObject = (node: Node): node is DesugaredObject => {
@@ -1459,10 +1460,10 @@ export class ObjectComp extends NodeBase {
   readonly type: "ObjectCompNode" = "ObjectCompNode";
 
   constructor(
-    readonly fields:        ObjectFields,
+    readonly fields: ObjectFields,
     readonly trailingComma: boolean,
-    readonly specs:         CompSpecs,
-    readonly loc:  lexical.LocationRange,
+    readonly specs: CompSpecs,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1484,7 +1485,7 @@ export interface ObjectComprehensionSimple extends NodeBase {
   readonly type: "ObjectComprehensionSimpleNode"
   readonly field: Node
   readonly value: Node
-  readonly id:    Identifier
+  readonly id: Identifier
   readonly array: Node
 }
 
@@ -1502,7 +1503,7 @@ export class Self extends NodeBase implements Resolvable {
   readonly type: "SelfNode" = "SelfNode";
 
   constructor(
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1539,8 +1540,8 @@ export class SuperIndex extends NodeBase {
 
   constructor(
     readonly index: Node | null,
-    readonly id:    Identifier | null,
-    readonly loc:  lexical.LocationRange,
+    readonly id: Identifier | null,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1566,10 +1567,10 @@ export type UnaryOp =
   "UopMinus";
 
 export const UopStrings = {
-  UopNot:        "!",
+  UopNot: "!",
   UopBitwiseNot: "~",
-  UopPlus:       "+",
-  UopMinus:      "-",
+  UopPlus: "+",
+  UopMinus: "-",
 };
 
 export const UopMap = im.Map<string, UnaryOp>({
@@ -1584,9 +1585,9 @@ export class Unary extends NodeBase {
   readonly type: "UnaryNode" = "UnaryNode";
 
   constructor(
-    readonly op:   UnaryOp,
+    readonly op: UnaryOp,
     readonly expr: Node,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1606,7 +1607,7 @@ export class Var extends NodeBase implements Resolvable {
 
   constructor(
     readonly id: Identifier,
-    readonly loc:  lexical.LocationRange,
+    readonly loc: lexical.LocationRange,
   ) { super(); }
 
   public prettyPrint = (): string => {
@@ -1747,7 +1748,7 @@ export const isResolveFailure = (thing): thing is ResolveFailure => {
 export class ResolvedFunction {
   constructor(
     public readonly functionNode: Function | ObjectField | LocalBind
-  ) {}
+  ) { }
 };
 
 export const isResolvedFunction = (thing): thing is ResolvedFunction => {
@@ -1762,7 +1763,7 @@ export const isResolvedFunction = (thing): thing is ResolvedFunction => {
 // A good example of such a situation is `self`, `super`, and
 // function parameters.
 export class ResolvedFreeVar {
-  constructor(public readonly variable: Var | FunctionParam) {}
+  constructor(public readonly variable: Var | FunctionParam) { }
 };
 
 export const isResolvedFreeVar = (thing): thing is ResolvedFreeVar => {
@@ -1787,7 +1788,7 @@ export const isUnresolvedIndex = (thing): thing is UnresolvedIndex => {
 export class UnresolvedIndexTarget {
   constructor(
     public readonly index: Index,
-  ) {}
+  ) { }
 }
 
 export const isUnresolvedIndexTarget = (thing): thing is UnresolvedIndexTarget => {
@@ -1807,7 +1808,7 @@ export class UnresolvedIndexId {
   constructor(
     public readonly index: Index,
     public readonly resolvedTarget: IndexedObjectFields,
-  ) {}
+  ) { }
 }
 
 export const isUnresolvedIndexId = (thing): thing is UnresolvedIndexId => {
@@ -1832,4 +1833,14 @@ export class Unresolved {
 
 export const isUnresolved = (thing): thing is Unresolved => {
   return thing instanceof Unresolved;
+}
+
+export class RootObjectFinderVisitor extends VisitorBase {
+  node = null
+
+  protected visitObject = (node: ObjectNode): void => {
+    if (node.trailingComma) {
+      this.node = node
+    }
+  }
 }

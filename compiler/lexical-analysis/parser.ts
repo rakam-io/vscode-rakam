@@ -11,28 +11,28 @@ import * as lexical from './lexical';
 type precedence = number;
 
 const applyPrecedence: precedence = 2,  // Function calls and indexing.
-      unaryPrecedence: precedence = 4,  // Logical and bitwise negation, unary + -
-      maxPrecedence:   precedence = 16; // Local, If, Import, Function, Error
+  unaryPrecedence: precedence = 4,  // Logical and bitwise negation, unary + -
+  maxPrecedence: precedence = 16; // Local, If, Import, Function, Error
 
 var bopPrecedence = im.Map<ast.BinaryOp, precedence>({
-  "BopMult":            5,
-  "BopDiv":             5,
-  "BopPercent":         5,
-  "BopPlus":            6,
-  "BopMinus":           6,
-  "BopShiftL":          7,
-  "BopShiftR":          7,
-  "BopGreater":         8,
-  "BopGreaterEq":       8,
-  "BopLess":            8,
-  "BopLessEq":          8,
-  "BopManifestEqual":   9,
+  "BopMult": 5,
+  "BopDiv": 5,
+  "BopPercent": 5,
+  "BopPlus": 6,
+  "BopMinus": 6,
+  "BopShiftL": 7,
+  "BopShiftR": 7,
+  "BopGreater": 8,
+  "BopGreaterEq": 8,
+  "BopLess": 8,
+  "BopLessEq": 8,
+  "BopManifestEqual": 9,
   "BopManifestUnequal": 9,
-  "BopBitwiseAnd":      10,
-  "BopBitwiseXor":      11,
-  "BopBitwiseOr":       12,
-  "BopAnd":             13,
-  "BopOr":              14,
+  "BopBitwiseAnd": 10,
+  "BopBitwiseXor": 11,
+  "BopBitwiseOr": 12,
+  "BopAnd": 13,
+  "BopOr": 14,
 });
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class parser {
 
   constructor(
     readonly t: lexer.Tokens
-  ) {}
+  ) { }
 
   public pop = (): lexer.Token => {
     const t = this.t.get(this.currT);
@@ -104,7 +104,7 @@ class parser {
   // the current position in the token stream (as measured by
   // `this.peek()`), and has no effect if they don't.
   public parseOptionalComments = ()
-  : ast.CppComment | ast.CComment | ast.HashComment | null => {
+    : ast.CppComment | ast.CComment | ast.HashComment | null => {
     const next = this.peek();
     switch (next.kind) {
       case "TokenCommentCpp": {
@@ -123,7 +123,7 @@ class parser {
   };
 
   public parseCppCommentBlock = ()
-  : ast.CppComment | ast.CComment | ast.HashComment | null => {
+    : ast.CppComment | ast.CComment | ast.HashComment | null => {
     let lines = im.List<string>();
     const first = this.peek();
     let curr = this.peek();
@@ -162,7 +162,7 @@ class parser {
   }
 
   public parseCComment = ()
-  : ast.CppComment | ast.CComment | ast.HashComment | null => {
+    : ast.CppComment | ast.CComment | ast.HashComment | null => {
     let lines = im.List<string>();
     let next = this.peek();
 
@@ -203,7 +203,7 @@ class parser {
   }
 
   public parseHashCommentBlock = ()
-  : ast.CppComment | ast.CComment | ast.HashComment | null => {
+    : ast.CppComment | ast.CComment | ast.HashComment | null => {
     let lines = im.List<string>();
     const first = this.peek();
     let curr = this.peek();
@@ -244,7 +244,7 @@ class parser {
   public parseCommaList = <T extends ast.Node>(
     end: lexer.TokenKind, elementKind: string,
     elementCallback: (e: ast.Node) => T | lexical.StaticError = (e) => <T>e,
-  ): {next: lexer.Token, exprs: im.List<T>, gotComma: boolean} | lexical.StaticError => {
+  ): { next: lexer.Token, exprs: im.List<T>, gotComma: boolean } | lexical.StaticError => {
     let exprs = im.List<T>();
     let gotComma = false;
     let first = true;
@@ -259,7 +259,7 @@ class parser {
       }
       if (next.kind === end) {
         // gotComma can be true or false here.
-        return {next: this.pop(), exprs: exprs, gotComma: gotComma};
+        return { next: this.pop(), exprs: exprs, gotComma: gotComma };
       }
 
       if (!first && !gotComma) {
@@ -285,7 +285,7 @@ class parser {
 
   public parseArgsList = (
     elementKind: string
-  ): {next: lexer.Token, params: ast.Nodes, gotComma: boolean} | lexical.StaticError => {
+  ): { next: lexer.Token, params: ast.Nodes, gotComma: boolean } | lexical.StaticError => {
     const result = this.parseCommaList<ast.Node>(
       "TokenParenR",
       elementKind,
@@ -293,7 +293,7 @@ class parser {
         const next = this.peek();
         let rhs: ast.Node | null = null;
         if (ast.isVar(expr) && next.kind === "TokenOperator" &&
-            next.data === "="
+          next.data === "="
         ) {
           this.pop();
           const assignment = this.parse(maxPrecedence, null);
@@ -310,12 +310,12 @@ class parser {
       return result;
     }
 
-    return {next: result.next, params: result.exprs, gotComma: result.gotComma};
+    return { next: result.next, params: result.exprs, gotComma: result.gotComma };
   }
 
   public parseParamsList = (
     elementKind: string
-  ): {next: lexer.Token, params: ast.FunctionParams, gotComma: boolean} | lexical.StaticError => {
+  ): { next: lexer.Token, params: ast.FunctionParams, gotComma: boolean } | lexical.StaticError => {
     const result = this.parseCommaList<ast.FunctionParam>(
       "TokenParenR",
       elementKind,
@@ -342,7 +342,7 @@ class parser {
       return result;
     }
 
-    return {next: result.next, params: result.exprs, gotComma: result.gotComma};
+    return { next: result.next, params: result.exprs, gotComma: result.gotComma };
   }
 
   public parseBind = (
@@ -377,7 +377,7 @@ class parser {
         return body;
       }
       const id = new ast.Identifier(varID.data, varID.loc);
-      const {params: params, gotComma: gotComma} = result;
+      const { params: params, gotComma: gotComma } = result;
       const location = locFromTokenAST(localToken, body);
       const bind = new ast.LocalBind(
         id, body, true, params, gotComma, location);
@@ -402,7 +402,7 @@ class parser {
   };
 
   public parseObjectAssignmentOp = (
-  ): {plusSugar: boolean, hide: ast.ObjectFieldHide} | lexical.StaticError => {
+  ): { plusSugar: boolean, hide: ast.ObjectFieldHide } | lexical.StaticError => {
     let plusSugar = false;
     let hide: ast.ObjectFieldHide | null = null;
 
@@ -442,9 +442,9 @@ class parser {
         return lexical.MakeStaticError(
           `Expected one of :, ::, :::, +:, +::, +:::, got: ${op.data}`,
           op.loc);
-      }
+    }
 
-    return {plusSugar: plusSugar, hide: hide};
+    return { plusSugar: plusSugar, hide: hide };
   };
 
   // parseObjectCompRemainder parses the remainder of an object as an
@@ -457,7 +457,7 @@ class parser {
   public parseObjectCompRemainder = (
     first: lexer.Token, forTok: lexer.Token, gotComma: boolean,
     fields: ast.ObjectFields,
-  ): {comp: ast.Node, last: lexer.Token} | lexical.StaticError => {
+  ): { comp: ast.Node, last: lexer.Token } | lexical.StaticError => {
     let numFields = 0;
     let numAsserts = 0;
     let field = fields.first();
@@ -499,14 +499,14 @@ class parser {
       result.compSpecs,
       locFromTokens(first, result.maybeIf),
     );
-    return {comp: comp, last: result.maybeIf};
+    return { comp: comp, last: result.maybeIf };
   };
 
   // parseObjectField will parse a single field in an object.
   public parseObjectField = (
     headingComments: ast.BindingComment, next: lexer.Token,
     literalFields: im.Set<literalField>,
-  ): {field: ast.ObjectField, literals: im.Set<literalField>} | lexical.StaticError => {
+  ): { field: ast.ObjectField, literals: im.Set<literalField> } | lexical.StaticError => {
     let kind: ast.ObjectFieldKind;
     let expr1: ast.Node | null = null;
     let id: ast.Identifier | null = null;
@@ -611,7 +611,7 @@ class parser {
   // object to create an appropriate location range for the field.
   public parseObjectLocal = (
     localToken: lexer.Token, binds: ast.IdentifierSet,
-  ): {field: ast.ObjectField, binds: ast.IdentifierSet} | lexical.StaticError => {
+  ): { field: ast.ObjectField, binds: ast.IdentifierSet } | lexical.StaticError => {
     const varID = this.popExpect("TokenIdentifier");
     if (lexical.isStaticError(varID)) {
       return varID;
@@ -688,7 +688,7 @@ class parser {
     // Message is optional, so location range changes based on whether
     // it's present.
     const loc: lexical.LocationRange = msg == null
-      ?  locFromTokenAST(localToken, cond)
+      ? locFromTokenAST(localToken, cond)
       : locFromTokenAST(localToken, msg);
 
     return new ast.ObjectField(
@@ -711,7 +711,7 @@ class parser {
   // immediately after we encounter the '{' character.
   public parseObjectRemainder = (
     tok: lexer.Token, heading: ast.BindingComment,
-  ): {objRemainder: ast.Node, next: lexer.Token} | lexical.StaticError => {
+  ): { objRemainder: ast.Node, next: lexer.Token } | lexical.StaticError => {
     let fields = im.List<ast.ObjectField>();
     let literalFields = im.Set<literalField>();
     let binds = im.Set<ast.IdentifierName>()
@@ -777,7 +777,7 @@ class parser {
         if (lexical.isStaticError(result)) {
           return result;
         }
-        return {objRemainder: result.comp, next: result.last};
+        return { objRemainder: result.comp, next: result.last };
       }
 
       if (!gotComma && !first) {
@@ -840,7 +840,7 @@ class parser {
   // for y in expr if expr for z in expr ...`
   public parseCompSpecs = (
     end: lexer.TokenKind
-  ): {compSpecs: ast.CompSpecs, maybeIf: lexer.Token} | lexical.StaticError => {
+  ): { compSpecs: ast.CompSpecs, maybeIf: lexer.Token } | lexical.StaticError => {
     let specs = im.List<ast.CompSpec>();
     while (true) {
       const varID = this.popExpect("TokenIdentifier");
@@ -870,7 +870,7 @@ class parser {
           cond, locFromTokenAST(maybeIf, cond)));
       }
       if (maybeIf.kind === end) {
-        return {compSpecs: specs, maybeIf: maybeIf};
+        return { compSpecs: specs, maybeIf: maybeIf };
       }
 
       if (maybeIf.kind !== "TokenFor") {
@@ -1073,9 +1073,9 @@ class parser {
             }
             break;
           }
-        default:
-          return lexical.MakeStaticError(
-            "Expected . or [ after super.", tok.loc);
+          default:
+            return lexical.MakeStaticError(
+              "Expected . or [ after super.", tok.loc);
         }
         return new ast.SuperIndex(index, id, tok.loc);
       }
@@ -1264,7 +1264,7 @@ class parser {
           return this.parseTerminal(heading);
         }
 
-        let lhs = this.parse(prec-1, heading);
+        let lhs = this.parse(prec - 1, heading);
         if (lexical.isStaticError(lhs)) {
           return lhs;
         }
@@ -1351,7 +1351,7 @@ class parser {
                 return result;
               }
 
-              const {next: end, params: args, gotComma: gotComma} = result;
+              const { next: end, params: args, gotComma: gotComma } = result;
               let tailStrict = false
               if (this.peek().kind === "TokenTailStrict") {
                 this.pop();
@@ -1371,7 +1371,7 @@ class parser {
               break;
             }
             default: {
-              const rhs = this.parse(prec-1, null);
+              const rhs = this.parse(prec - 1, null);
               if (lexical.isStaticError(rhs)) {
                 return rhs;
               }

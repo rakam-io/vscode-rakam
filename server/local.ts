@@ -21,7 +21,7 @@ export class VsDocumentManager implements editor.DocumentManager {
 
   get = (
     fileSpec: editor.FileUri | ast.Import | ast.ImportStr,
-  ): {text: string, version?: number, resolvedPath: string} => {
+  ): { text: string, version?: number, resolvedPath: string } => {
     const parsedFileUri = this.libResolver.resolvePath(fileSpec);
     if (parsedFileUri == null) {
       throw new Error(`Could not open file`);
@@ -67,7 +67,7 @@ export class VsDocumentManager implements editor.DocumentManager {
     }
   }
 
-  private fsCache = im.Map<string, {text: string, version: number}>();
+  private fsCache = im.Map<string, { text: string, version: number }>();
 }
 
 export class VsCompilerService implements _static.LexicalAnalyzerService {
@@ -118,6 +118,7 @@ export class VsCompilerService implements _static.LexicalAnalyzerService {
 
     const parsedDoc = new _static.ParsedDocument(text, lex, parse, version);
     this.docCache = this.docCache.set(fileUri, parsedDoc);
+
     return parsedDoc;
   }
 

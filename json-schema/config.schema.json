@@ -1,0 +1,172 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/root.json",
+    "type": "object",
+    "title": "The Root Schema",
+    "required": [
+        "label",
+        "version"
+    ],
+    "properties": {
+        "databases": {
+            "$id": "#/properties/databases",
+            "type": "array",
+            "title": "The Databases Schema",
+            "items": {
+                "$id": "#/properties/databases/items",
+                "type": "string",
+                "title": "The Items Schema",
+                "default": "",
+                "examples": [
+                    "bigQuery"
+                ],
+                "pattern": "^(.*)$"
+            }
+        },
+        "description": {
+            "$id": "#/properties/description",
+            "type": "string",
+            "title": "The Description Schema",
+            "default": "",
+            "examples": [
+                "Analytics models for Firebase BigQuery Export."
+            ],
+            "pattern": "^(.*)$"
+        },
+        "image": {
+            "$id": "#/properties/image",
+            "type": "string",
+            "title": "The Image Schema",
+            "default": "",
+            "examples": [
+                "https://github.com/rakam-io/recipes/raw/master/firebase/logo.png"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "label": {
+            "$id": "#/properties/label",
+            "type": "string",
+            "title": "The Label Schema",
+            "enum": [
+                "equals",
+                "notEquals",
+                "in",
+                "contains",
+                "startsWith",
+                "endsWith",
+                "notContains"
+            ],
+            "examples": [
+                "Firebase Analytics"
+            ]
+        },
+        "tags": {
+            "$id": "#/properties/tags",
+            "type": "array",
+            "title": "The Tags Schema",
+            "items": {
+                "$id": "#/properties/tags/items",
+                "type": "string",
+                "title": "The Items Schema",
+                "default": "",
+                "examples": [
+                    "event-analytics"
+                ],
+                "pattern": "^(.*)$"
+            }
+        },
+        "variables": {
+            "$id": "#/properties/variables",
+            "type": "object",
+            "title": "The Variables Schema",
+            "required": [
+                "installRevenue"
+            ],
+            "properties": {
+                "installRevenue": {
+                    "$id": "#/properties/variables/properties/installRevenue",
+                    "type": "object",
+                    "title": "The Installrevenue Schema",
+                    "required": [
+                        "default",
+                        "description",
+                        "label",
+                        "type",
+                        "options"
+                    ],
+                    "properties": {
+                        "default": {
+                            "$id": "#/properties/variables/properties/installRevenue/properties/default",
+                            "type": "boolean",
+                            "title": "The Default Schema",
+                            "default": false,
+                            "examples": [
+                                true
+                            ]
+                        },
+                        "description": {
+                            "$id": "#/properties/variables/properties/installRevenue/properties/description",
+                            "type": "string",
+                            "title": "The Description Schema",
+                            "default": "",
+                            "examples": [
+                                "If you're sending the in app purchases to Firebase, you can enable this toggle in order to see metrics related to your revenue."
+                            ],
+                            "pattern": "^(.*)$"
+                        },
+                        "label": {
+                            "$id": "#/properties/variables/properties/installRevenue/properties/label",
+                            "type": "string",
+                            "title": "The Label Schema",
+                            "default": "",
+                            "examples": [
+                                "Install Revenue Metrics"
+                            ],
+                            "pattern": "^(.*)$"
+                        },
+                        "type": {
+                            "$id": "#/properties/variables/properties/installRevenue/properties/type",
+                            "type": "string",
+                            "title": "The Type Schema",
+                            "default": "",
+                            "examples": [
+                                "boolean"
+                            ],
+                            "pattern": "^(.*)$"
+                        },
+                        "options": {
+                            "$id": "#/properties/variables/properties/installRevenue/properties/options",
+                            "type": "object",
+                            "title": "The Options Schema",
+                            "required": [
+                                "placeholder"
+                            ],
+                            "properties": {
+                                "placeholder": {
+                                    "$id": "#/properties/variables/properties/installRevenue/properties/options/properties/placeholder",
+                                    "type": "string",
+                                    "title": "The Placeholder Schema",
+                                    "default": "",
+                                    "examples": [
+                                        "analytics_54353"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "version": {
+            "$id": "#/properties/version",
+            "type": "integer",
+            "title": "The Version Schema",
+            "default": 0,
+            "examples": [
+                1
+            ]
+        }
+    }
+}

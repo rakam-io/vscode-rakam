@@ -20,8 +20,7 @@
 	"license": "SEE LICENSE IN 'LICENSE' file",
 	"activationEvents": [
 		"onLanguage:jsonnet",
-		"onCommand:jsonnet.previewToSide",
-		"onCommand:jsonnet.preview"
+		"onCommand:jsonnet.previewToSide"
 	],
 	"categories": [
 		"Programming Languages",
@@ -31,6 +30,10 @@
 		"jsonValidation": [
 			{
 				"fileMatch": "_config.json",
+				"url": "./json-schema/config.schema.json"
+			},
+			{
+				"fileMatch": "*.model.json",
 				"url": "./json-schema/model.schema.json"
 			}
 		],
@@ -101,7 +104,8 @@
 		]
 	},
 	"dependencies": {
-		"ajv": "^6.10.2",
+		"ajv": "^6.11.0",
+		"better-ajv-errors": "^0.6.7",
 		"filepath": "^1.1.0",
 		"immutable": "^3.8.1",
 		"js-yaml": "^3.0.0",
@@ -130,5 +134,10 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "node ./node_modules/vscode/bin/test",
 		"vscode:prepublish": "tsc -p ./ --outDir ./out"
+	},
+	"__metadata": {
+		"id": "42f4e659-8dda-4182-8162-8cba5820b26e",
+		"publisherDisplayName": "rakam",
+		"publisherId": "18ddab1f-a5fa-4f20-9bda-dd0a00214447"
 	}
 }

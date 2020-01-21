@@ -1,17 +1,30 @@
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
 
 import * as client from 'vscode-languageclient';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as ajv from 'ajv';
+import ajv from 'ajv';
 import * as vs from 'vscode';
 import * as yaml from "js-yaml";
-
+import betterAjvErrors from 'better-ajv-errors';
 import * as im from 'immutable';
-
 import * as lexical from '../compiler/lexical-analysis/lexical';
 
+// var jsonSchemaCompiler = new ajv({ allErrors: true, jsonPointers: true });
+// var validate = jsonSchemaCompiler.compile(schemaDefinition);
+
+export function compileJsonnet(sourceFile: string): string {
+  let codePaths = '';
+  // Compile the preview Jsonnet file.
+  const extStrsObj = rakamRecipe.buildVariables(sourceFile);
+  const extCodes = Object.keys(extStrsObj)
+    .map(key => `--ext-code "${key}"='${JSON.stringify(extStrsObj[key])}'`)
+    .join(" ");
+
+  const libPaths = workspace.libPaths();
+  return execSync(`${jsonnet.executable} ${libPaths} ${extCodes} ${codePaths} ${sourceFile}`).toString();
+}
 
 const example_variable_values = {
   'model': 'model',
@@ -42,8 +55,7 @@ namespace register {
   // jsonnetClient registers the Jsonnet language client with vscode.
   export const jsonnetClient = (context: vs.ExtensionContext): void => {
     // The server is implemented in node
-    let languageClient = jsonnet.languageClient(
-      context.asAbsolutePath(path.join('out', 'server', 'server.js')));
+    let languageClient = jsonnet.languageClient(context.asAbsolutePath(path.join('out', 'server', 'server.js')));
 
 
     // Push the disposable to the context's subscriptions so that the
@@ -69,87 +81,99 @@ namespace register {
   // open a "preview" pane that renders their Jsonnet, similar to the
   // markdown preview pane.
   export const previewCommands = (context: vs.ExtensionContext, diagProvider: jsonnet.DiagnosticProvider): void => {
-    const docProvider = new jsonnet.DocumentProvider();
+    const activePanels = new Map<string, vs.TextEditor>();
 
-    let panel = null;
+    // const docProvider = new jsonnet.DocumentProvider();
+    // Subscribe to document updates. This allows us to detect (e.g.)
+    // when a document was saved.
+    // context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider(jsonnet.PREVIEW_SCHEME, docProvider));
 
     // Expand Jsonnet, register errors as diagnostics with vscode, and
     // generate preview if a preview tab is open.
-    const preview = (doc: vs.TextDocument): void => {
-      if (doc.languageId === "jsonnet") {
-        const result = docProvider.cachePreview(doc);
-        if (jsonnet.isRuntimeFailure(result)) {
-          diagProvider.report(doc.uri, result.error);
-        } else {
-          diagProvider.clear(doc.uri);
-          if (panel != null) {
-            panel.webview.html = '<pre>' + result + '</pre>'
-          }
+    // const preview = async (doc: vs.TextDocument): Promise<void> => {
+    //   if (doc.languageId === "jsonnet") {
+    //     const result = docProvider.cachePreview(doc);
+    //     if (jsonnet.isRuntimeFailure(result)) {
+    //       diagProvider.report(doc.uri, result.error);
+    //     } else {
+    //       diagProvider.clear(doc.uri);
+    //       const jsonResult = JSON.parse(result);
+    //       const isValid = await validate(jsonResult);
+    //       if (!isValid) {
+    //         const b = betterAjvErrors(schemaDefinition, jsonResult, validate.errors, { format: 'js' })
+    //         console.log(b);
+    //       }
+
+    const previewExisting = async (doc: vs.TextDocument): Promise<void> => {
+      if (doc.uri.scheme === 'file' && doc.fileName.endsWith(".jsonnet")) {
+        const panel = activePanels.get(doc.uri.fsPath)
+        if (panel == null) {
+          return
         }
+
+        let newText
+        try {
+          newText = compileJsonnet(doc.uri.fsPath)
+        } catch (error) {
+          alert.couldNotRenderJsonnet(error.message)
+          return
+        }
+
+        var firstLine = panel.document.lineAt(0);
+        var lastLine = panel.document.lineAt(panel.document.lineCount - 1);
+        var fullRange = new vs.Range(firstLine.range.start, lastLine.range.end);
+        const fullRange2 = new vs.Range(0, 0, doc.lineCount, doc.eol)
+
+        panel.edit(edit => edit.replace(fullRange, newText))
+        // const textEdit = new vs.TextEdit(fullRange, newText)
+        // const edit = new vs.WorkspaceEdit()
+        // edit.set(panel.document.uri, [textEdit])
+        // vs.workspace.applyEdit(edit)
       }
     }
 
-    // Subscribe to document updates. This allows us to detect (e.g.)
-    // when a document was saved.
-    context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider(jsonnet.PREVIEW_SCHEME, docProvider));
-
-    // Call `preview` any time we save or open a document.
-    context.subscriptions.push(vs.workspace.onDidSaveTextDocument(preview));
-    context.subscriptions.push(vs.workspace.onDidOpenTextDocument(preview));
+    // Update the compiled json any time we save or open a document.
+    context.subscriptions.push(vs.workspace.onDidSaveTextDocument(previewExisting));
+    context.subscriptions.push(vs.workspace.onDidOpenTextDocument(previewExisting));
     context.subscriptions.push(vs.workspace.onDidCloseTextDocument(doc => {
-      docProvider.delete(doc);
+      // TODO: not working
+      if (doc.uri.scheme === jsonnet.PREVIEW_SCHEME) {
+        delete activePanels[""]
+      }
     }));
 
     // Register Jsonnet preview commands.
-    context.subscriptions.push(vs.commands.registerCommand('jsonnet.previewToSide', () => {
+    context.subscriptions.push(vs.commands.registerCommand('jsonnet.previewToSide', async () => {
       const editor = vs.window.activeTextEditor;
       if (editor == null) {
         alert.noActiveWindow();
         return;
       }
 
-      const languageId = editor.document.languageId;
-      if (!(editor.document.languageId === "jsonnet")) {
-        alert.documentNotJsonnet(languageId);
+      const fileName = editor.document.fileName.toLowerCase();
+      if (!fileName.endsWith(".jsonnet")) {
+        alert.documentNotJsonnet(fileName);
         return;
       }
 
-      const previewUri = jsonnet.canonicalPreviewUri(editor.document.uri);
+      // compile to the same path with json extension
+      const fsPath = editor.document.uri.fsPath
+      const filePath = rakamRecipe.convertExt(fsPath, "jsonnet", "json")
+      // let uri = vs.Uri.file(filePath).with({ scheme: jsonnet.PREVIEW_SCHEME });
+      let uri = vs.Uri.file(filePath).with({ scheme: 'untitled' });
 
-      panel = vs.window.createWebviewPanel(
-        'catCoding',
-        `Jsonnet preview '${path.basename(editor.document.fileName)}'`,
-        getViewColumn(true),
-        {} // Webview options. More on these later.
-      );
-
-      preview(editor.document);
-
-      panel.onDidDispose(
-        () => {
-          // When the panel is closed, cancel any future updates to the webview content
-          panel = null;
-        },
-        null,
-        context.subscriptions
-      );
+      if (activePanels[fsPath] == null) {
+        const ff = await vs.workspace.openTextDocument(uri)
+        activePanels.set(fsPath, await vs.window.showTextDocument(await vs.workspace.openTextDocument(uri), getViewColumn()))
+        previewExisting(editor.document)
+      }
     }));
-
-    // Call `preview` when we open the editor.
-    const active = vs.window.activeTextEditor;
-    if (active != null) {
-      preview(active.document);
-    }
   }
 
-  const getViewColumn = (sideBySide: boolean): vs.ViewColumn | undefined => {
+  const getViewColumn = (): vs.ViewColumn | undefined => {
     const active = vs.window.activeTextEditor;
     if (!active) {
       return vs.ViewColumn.One;
-    }
-
-    if (!sideBySide) {
-      return active.viewColumn;
     }
 
     switch (active.viewColumn) {
@@ -242,7 +266,7 @@ namespace alert {
   }
 
   export const documentNotJsonnet = (languageId) => {
-    alert(`Can't generate Jsonnet document preview for document with language id '${languageId}'`);
+    alert(`Can't generate Jsonnet document preview for document '${languageId}'`);
   }
 
   export const couldNotRenderJsonnet = (reason) => {
@@ -258,30 +282,6 @@ namespace alert {
   }
 }
 
-namespace html {
-  export const body = (body: string): string => {
-    return `<html><body>${body}</body></html>`
-  }
-
-  export const codeLiteral = (code: string): string => {
-    return `<pre><code>${code}</code></pre>`
-  }
-
-  export const errorMessage = (message: string): string => {
-    return `<i><pre>${message}</pre></i>`;
-  }
-
-  export const prettyPrintObject = (
-    json: string, outputFormat: "json" | "yaml"
-  ): string => {
-    if (outputFormat == "yaml") {
-      return codeLiteral(yaml.safeDump(JSON.parse(json)));
-    } else {
-      return codeLiteral(JSON.stringify(JSON.parse(json), null, 4));
-    }
-  }
-}
-
 namespace jsonnet {
   export let executable = "jsonnet";
   export const PREVIEW_SCHEME = "jsonnet-preview";
@@ -291,9 +291,6 @@ namespace jsonnet {
   };
 
   export const languageClient = (serverModule: string) => {
-    // The debug options for the server
-    let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
-
     // If the extension is launched in debug mode then the debug
     // server options are used. Otherwise the run options are used
     let serverOptions: client.ServerOptions = {
@@ -304,7 +301,8 @@ namespace jsonnet {
       debug: {
         module: serverModule,
         transport: client.TransportKind.ipc,
-        options: debugOptions
+        // The debug options for the server
+        options: { execArgv: ["--nolazy", "--inspect=6009"] }
       }
     }
 
@@ -330,19 +328,6 @@ namespace jsonnet {
       clientOptions);
   }
 
-  export const canonicalPreviewUri = (fileUri: vs.Uri) => {
-    return fileUri.with({
-      scheme: jsonnet.PREVIEW_SCHEME,
-      path: `${fileUri.path}.rendered`,
-      query: fileUri.toString(),
-    });
-  }
-
-  export const fileUriFromPreviewUri = (previewUri: vs.Uri): vs.Uri => {
-    const file = previewUri.fsPath.slice(0, -(".rendered".length));
-    return vs.Uri.file(file);
-  }
-
   // RuntimeError represents a runtime failure in a Jsonnet program.
   export class RuntimeFailure {
     constructor(
@@ -361,57 +346,32 @@ namespace jsonnet {
   // `delete` so that the caller can get the results of the document
   // compilation for purposes of (e.g.) reporting diagnostic issues.
   export class DocumentProvider implements vs.TextDocumentContentProvider {
-    public provideTextDocumentContent = (previewUri: vs.Uri): Thenable<string> => {
-      const sourceUri = vs.Uri.parse(previewUri.query);
-      return vs.workspace.openTextDocument(sourceUri)
-        .then(sourceDoc => {
-          const result = this.previewCache.has(sourceUri.toString())
-            ? this.previewCache.get(sourceUri.toString())
-            : this.cachePreview(sourceDoc);
-          if (isRuntimeFailure(result)) {
-            return html.body(html.errorMessage(result.error));
-          }
-          const outputFormat = workspace.outputFormat();
-          return html.body(html.prettyPrintObject(result, outputFormat));
-        });
+    private _onDidChangeFile: vs.EventEmitter<vs.FileChangeEvent[]>;
+
+    constructor() {
+      this._onDidChangeFile = new vs.EventEmitter<vs.FileChangeEvent[]>();
     }
 
-    public cachePreview = (sourceDoc: vs.TextDocument): RuntimeFailure | string => {
-      const sourceUri = sourceDoc.uri.toString();
-      const sourceFile = sourceDoc.uri.fsPath
+    public updateFile(uri: vs.Uri) {
+      this._onDidChangeFile.fire([{
+        type: vs.FileChangeType.Changed,
+        uri: uri
+      } as vs.FileChangeEvent]);
+    }
 
-      let codePaths = '';
+    get onDidChangeFile(): vs.Event<vs.FileChangeEvent[]> {
+      return this._onDidChangeFile.event;
+    }
 
+    public provideTextDocumentContent = (previewUri: vs.Uri): string => {
+      // find the jsonnet file
+      const key = rakamRecipe.convertExt(previewUri.fsPath, "json", "jsonnet")
       try {
-        // Compile the preview Jsonnet file.
-        const extStrsObj = rakamRecipe.buildVariables(sourceFile);
-        const extCodes = Object.keys(extStrsObj)
-          .map(key => `--ext-code "${key}"='${JSON.stringify(extStrsObj[key])}'`)
-          .join(" ");
-
-        const libPaths = workspace.libPaths();
-        const jsonOutput = execSync(`${jsonnet.executable} ${libPaths} ${extCodes} ${codePaths} ${sourceFile}`).toString();
-        // Cache.
-        this.previewCache = this.previewCache.set(sourceUri, jsonOutput);
-
-        return jsonOutput;
-      } catch (e) {
-        const failure = new RuntimeFailure(e.message);
-        this.previewCache = this.previewCache.set(sourceUri, failure);
-        return failure;
+        return compileJsonnet(key)
+      } catch (error) {
+        alert.couldNotRenderJsonnet(error.message)
       }
     }
-
-    public delete = (document: vs.TextDocument): void => {
-      const previewUri = document.uri.query.toString();
-      this.previewCache = this.previewCache.delete(previewUri);
-    }
-
-    //
-    // Private members.
-    //
-
-    private previewCache = im.Map<string, string | RuntimeFailure>();
   }
 
   // DiagnosticProvider will consume the output of the Jsonnet CLI and
@@ -529,8 +489,11 @@ namespace jsonnet {
 }
 
 export namespace rakamRecipe {
+  export function convertExt(fsPath: string, from: string, to: string): string {
+    return fsPath.substring(0, fsPath.length - from.length) + to
+  }
 
-  export function buildVariables(filePath: string, ): object {
+  export function buildVariables(filePath: string): object {
     const workspacePath = vs.workspace.rootPath
     let currentPath = path.dirname(filePath);
     let configFile = null
@@ -548,7 +511,6 @@ export namespace rakamRecipe {
 
     if (configFile != null) {
       try {
-        // const jsonOutput = execSync(`${jsonnet.executable} ${configFile}`).toString();
         const jsonOutput = execSync(`${jsonnet.executable} ${configFile}`).toString();
         const variables = JSON.parse(jsonOutput).variables || {}
         Object.keys(variables).forEach(variableName => {

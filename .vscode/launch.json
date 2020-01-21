@@ -6,11 +6,12 @@
     "configurations": [
         {
             "type": "node",
-            "request": "launch",
-            "name": "Debug File",
-            "program": "${file}",
+            "request": "attach",
+            "name": "Attach to Server",
+            "port": 6009,
+            "restart": true,
             "outFiles": [
-                "/Users/buremba/.vscode/extensions/heptio.jsonnet-0.1.0/out/client/test.js"
+                "${workspaceRoot}/server/out/**/*.js"
             ]
         },
         {

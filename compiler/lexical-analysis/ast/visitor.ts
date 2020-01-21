@@ -1,7 +1,3 @@
-import * as server from 'vscode-languageserver';
-
-import * as im from 'immutable';
-
 import * as lexical from '../lexical';
 import * as tree from './tree';
 
@@ -16,7 +12,7 @@ export abstract class VisitorBase implements Visitor {
     protected rootNode: tree.Node,
     private parent: tree.Node | null = null,
     private env: tree.Environment = tree.emptyEnvironment,
-  ) {}
+  ) { }
 
   public visit = () => {
     this.visitHelper(this.rootNode, this.parent, this.env);
@@ -31,7 +27,7 @@ export abstract class VisitorBase implements Visitor {
 
     this.previsit(node, parent, currEnv);
 
-    switch(node.type) {
+    switch (node.type) {
       case "CommentNode": {
         this.visitComment(<tree.Comment>node);
         return;
@@ -352,45 +348,45 @@ export abstract class VisitorBase implements Visitor {
 
   protected previsit = (
     node: tree.Node, parent: tree.Node | null, currEnv: tree.Environment
-  ): void => {}
+  ): void => { }
 
-  protected visitComment = (node: tree.Comment): void => {}
-  protected visitCompSpec = (node: tree.CompSpec): void => {}
-  protected visitApply = (node: tree.Apply): void => {}
-  protected visitApplyBrace = (node: tree.ApplyBrace): void => {}
-  protected visitApplyParamAssignmentNode = (node: tree.ApplyParamAssignment): void => {}
-  protected visitArray = (node: tree.Array): void => {}
-  protected visitArrayComp = (node: tree.ArrayComp): void => {}
-  protected visitAssert = (node: tree.Assert): void => {}
-  protected visitBinary = (node: tree.Binary): void => {}
-  protected visitBuiltin = (node: tree.Builtin): void => {}
-  protected visitConditional = (node: tree.Conditional): void => {}
-  protected visitDollar = (node: tree.Dollar): void => {}
-  protected visitError = (node: tree.ErrorNode): void => {}
-  protected visitFunction = (node: tree.Function): void => {}
+  protected visitComment = (node: tree.Comment): void => { }
+  protected visitCompSpec = (node: tree.CompSpec): void => { }
+  protected visitApply = (node: tree.Apply): void => { }
+  protected visitApplyBrace = (node: tree.ApplyBrace): void => { }
+  protected visitApplyParamAssignmentNode = (node: tree.ApplyParamAssignment): void => { }
+  protected visitArray = (node: tree.Array): void => { }
+  protected visitArrayComp = (node: tree.ArrayComp): void => { }
+  protected visitAssert = (node: tree.Assert): void => { }
+  protected visitBinary = (node: tree.Binary): void => { }
+  protected visitBuiltin = (node: tree.Builtin): void => { }
+  protected visitConditional = (node: tree.Conditional): void => { }
+  protected visitDollar = (node: tree.Dollar): void => { }
+  protected visitError = (node: tree.ErrorNode): void => { }
+  protected visitFunction = (node: tree.Function): void => { }
 
-  protected visitIdentifier = (node: tree.Identifier): void => {}
-  protected visitImport = (node: tree.Import): void => {}
-  protected visitImportStr = (node: tree.ImportStr): void => {}
-  protected visitIndex = (node: tree.Index): void => {}
-  protected visitLocalBind = (node: tree.LocalBind): void => {}
-  protected visitLocal = (node: tree.Local): void => {}
+  protected visitIdentifier = (node: tree.Identifier): void => { }
+  protected visitImport = (node: tree.Import): void => { }
+  protected visitImportStr = (node: tree.ImportStr): void => { }
+  protected visitIndex = (node: tree.Index): void => { }
+  protected visitLocalBind = (node: tree.LocalBind): void => { }
+  protected visitLocal = (node: tree.Local): void => { }
 
-  protected visitLiteralBoolean = (node: tree.LiteralBoolean): void => {}
-  protected visitLiteralNull = (node: tree.LiteralNull): void => {}
+  protected visitLiteralBoolean = (node: tree.LiteralBoolean): void => { }
+  protected visitLiteralNull = (node: tree.LiteralNull): void => { }
 
-  protected visitLiteralNumber = (node: tree.LiteralNumber): void => {}
-  protected visitLiteralString = (node: tree.LiteralString): void => {}
-  protected visitObjectField = (node: tree.ObjectField): void => {}
-  protected visitObject = (node: tree.ObjectNode): void => {}
-  protected visitDesugaredObjectField = (node: tree.DesugaredObjectField): void => {}
-  protected visitDesugaredObject = (node: tree.DesugaredObject): void => {}
-  protected visitObjectComp = (node: tree.ObjectComp): void => {}
-  protected visitObjectComprehensionSimple = (node: tree.ObjectComprehensionSimple): void => {}
-  protected visitSelf = (node: tree.Self): void => {}
-  protected visitSuperIndex = (node: tree.SuperIndex): void => {}
-  protected visitUnary = (node: tree.Unary): void => {}
-  protected visitVar = (node: tree.Var): void => {}
+  protected visitLiteralNumber = (node: tree.LiteralNumber): void => { }
+  protected visitLiteralString = (node: tree.LiteralString): void => { }
+  protected visitObjectField = (node: tree.ObjectField): void => { }
+  protected visitObject = (node: tree.ObjectNode): void => { }
+  protected visitDesugaredObjectField = (node: tree.DesugaredObjectField): void => { }
+  protected visitDesugaredObject = (node: tree.DesugaredObject): void => { }
+  protected visitObjectComp = (node: tree.ObjectComp): void => { }
+  protected visitObjectComprehensionSimple = (node: tree.ObjectComprehensionSimple): void => { }
+  protected visitSelf = (node: tree.Self): void => { }
+  protected visitSuperIndex = (node: tree.SuperIndex): void => { }
+  protected visitUnary = (node: tree.Unary): void => { }
+  protected visitVar = (node: tree.Var): void => { }
 }
 
 // ----------------------------------------------------------------------------
@@ -442,7 +438,7 @@ export class AnalyzableFindFailure {
     public readonly kind: "AfterLineEnd" | "NotIdentifier",
     public readonly tightestEnclosingNode: tree.Node,
     public readonly terminalNodeOnCursorLine: tree.Node | null,
-  ) {}
+  ) { }
 }
 
 export const isAnalyzableFindFailure = (
@@ -459,7 +455,7 @@ export const isAnalyzableFindFailure = (
 // of a document's AST, which means we cannot inspect the context of
 // where the cursor lies in an AST.
 export class UnanalyzableFindFailure {
-  constructor(public readonly kind: "BeforeDocStart" | "AfterDocEnd") {}
+  constructor(public readonly kind: "BeforeDocStart" | "AfterDocEnd") { }
 }
 
 export const isUnanalyzableFindFailure = (
