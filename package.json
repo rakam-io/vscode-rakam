@@ -1,10 +1,10 @@
 {
 	"displayName": "Rakam Data Modeling",
-	"homepage": "https://github.com/rakam/vscode-rakam/blob/master/README.md",
+	"homepage": "https://github.com/rakam-io/vscode-rakam/blob/master/README.md",
 	"icon": "images/square.png",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rakam/vscode-rakam.git"
+		"url": "https://github.com/rakam-io/vscode-rakam.git"
 	},
 	"name": "rakam-data-modeling",
 	"preview": true,
@@ -46,9 +46,22 @@
 		"commands": [
 			{
 				"command": "jsonnet.previewToSide",
-				"title": "Jsonnet: Open Preview to the Side"
+				"title": "Compile and Preview Jsonnet",
+				"icon": {
+					"dark": "./media/compile_dark.svg",
+					"light": "./media/compile_light.svg"
+				}
 			}
 		],
+		"menus": {
+			"editor/title": [
+				{
+					"when": "editorLangId == jsonnet",
+					"command": "jsonnet.previewToSide",
+					"group": "navigation"
+				}
+			]
+		},
 		"configuration": {
 			"properties": {
 				"jsonnet.executablePath": {
@@ -125,30 +138,7 @@
 		"vscode": "^1.1.36"
 	},
 	"engines": {
-		"vscode": "^1.25.x"
-	},
-	"menus": {
-		"explorer/context": [
-			{
-				"command": "jsonnet.previewToSide",
-				"when": "editorLangId == jsonnet",
-				"group": "navigation"
-			}
-		],
-		"commandPalette": [
-			{
-				"when": "editorLangId == jsonnet",
-				"command": "jsonnet.previewToSide"
-			}
-		],
-		"editor/title": [
-			{
-				"when": "editorLangId == jsonnet",
-				"command": "jsonnet.previewToSide",
-				"alt": "jsonnet.previewToSide",
-				"group": "navigation"
-			}
-		]
+		"vscode": "^1.39.x"
 	},
 	"extensionDependencies": [
 		"igorsbitnev.error-gutters",
