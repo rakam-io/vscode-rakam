@@ -7,7 +7,7 @@
 		"url": "https://github.com/rakam-io/vscode-rakam.git"
 	},
 	"name": "rakam-data-modeling",
-	"preview": true,
+	"preview": false,
 	"keywords": [
 		"data-modeling",
 		"analytics",
