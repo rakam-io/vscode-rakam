@@ -8,13 +8,17 @@ import * as lexer from '../lexical-analysis/lexer';
 import * as lexical from '../lexical-analysis/lexical';
 import * as service from './service';
 import * as editor from '../editor';
+import { HoverService, SchemaType } from './rakam-schema';
+import { FileType } from 'vscode';
+import { isObjectNode, isIdentifier, RootObjectFinderVisitor } from '../lexical-analysis/ast';
 
 //
 // Analyzer.
 //
 
-export interface EventedAnalyzer
-  extends editor.DocumentEventListener, editor.UiEventListener { }
+const hoverService = new HoverService()
+
+export interface EventedAnalyzer extends editor.DocumentEventListener, editor.UiEventListener { }
 
 // TODO: Rename this to `EventedAnalyzer`.
 export class Analyzer implements EventedAnalyzer {
@@ -29,17 +33,45 @@ export class Analyzer implements EventedAnalyzer {
 
   public onDocumentOpen = this.compilerService.cache;
 
-  public onDocumentSave = this.compilerService.cache;
-
   public onDocumentClose = this.compilerService.delete;
 
+  public onDocumentSave(uri: string, text: string, version?: number): void {
+    const cached = this.compilerService.cache(uri, text, version);
+
+    if (service.isFailedParsedDocument(cached)) {
+      return;
+    }
+
+    const visitor = new RootObjectFinderVisitor(cached.parse)
+    visitor.visit()
+    const rootNode = visitor.node
+    if (rootNode == null) {
+      return
+    }
+  };
+
+  private findObjectPathIfPossible(node: ast.Node): Array<String> {
+    let lNode = node, accessor = [];
+    while (lNode != null) {
+      if (isObjectNode(lNode)) {
+        if (lNode.trailingComma) {
+          console.log(lNode)
+          break
+        }
+      }
+      if (isIdentifier(lNode)) {
+        accessor.push(lNode.name)
+      }
+      lNode = lNode.parent
+    }
+
+    return accessor
+  }
   //
   // AnalysisEventListener implementation.
   //
 
-  public onHover = (
-    fileUri: string, cursorLoc: lexical.Location
-  ): Promise<editor.HoverInfo> => {
+  public onHover = (fileUri: string, cursorLoc: lexical.Location): Promise<editor.HoverInfo> => {
     const emptyOnHover = Promise.resolve().then(
       () => <editor.HoverInfo>{
         contents: [],
@@ -55,18 +87,17 @@ export class Analyzer implements EventedAnalyzer {
       try {
         const msg = this.renderOnhoverMessage(fileUri, node);
         return Promise.resolve().then(
-          () => <editor.HoverInfo> {
+          () => <editor.HoverInfo>{
             contents: msg,
           });
-      } catch(err) {
+      } catch (err) {
         console.log(err);
         return emptyOnHover;
       }
     }
 
     try {
-      const {text: docText, version: version, resolvedPath: resolvedUri} =
-        this.documents.get(fileUri);
+      const { text: docText, version: version, resolvedPath: resolvedUri } = this.documents.get(fileUri);
       const cached = this.compilerService.cache(fileUri, docText, version);
       if (service.isFailedParsedDocument(cached)) {
         return emptyOnHover;
@@ -88,8 +119,7 @@ export class Analyzer implements EventedAnalyzer {
         return emptyOnHover;
       }
 
-      const ctx = new ast.ResolutionContext(
-        this.compilerService, this.documents, resolvedUri);
+      const ctx = new ast.ResolutionContext(this.compilerService, this.documents, resolvedUri);
       const resolved = ast.tryResolveIndirections(nodeAtPos, ctx);
 
       // Handle the special cases. If we hover over a symbol that points
@@ -100,7 +130,9 @@ export class Analyzer implements EventedAnalyzer {
       // the function itself.
       if (ast.isResolveFailure(resolved)) {
         if (ast.isUnresolved(resolved) || ast.isUnresolvedIndex(resolved)) {
-          return emptyOnHover;
+          const path = this.findObjectPathIfPossible(nodeAtPos);
+          const hoverAction = hoverService.onHover(path, SchemaType.MODEL);
+          return hoverAction != null ? hoverAction : emptyOnHover;
         } else if (ast.isResolvedFreeVar(resolved)) {
           return onHoverPromise(resolved.variable);
         } else if (ast.isResolvedFunction(resolved)) {
@@ -117,9 +149,7 @@ export class Analyzer implements EventedAnalyzer {
     }
   }
 
-  public onComplete = (
-    fileUri: editor.FileUri, cursorLoc: lexical.Location
-  ): Promise<editor.CompletionInfo[]> => {
+  public onComplete = (fileUri: editor.FileUri, cursorLoc: lexical.Location): Promise<editor.CompletionInfo[]> => {
     const doc = this.documents.get(fileUri);
 
     return Promise.resolve().then(
@@ -136,32 +166,28 @@ export class Analyzer implements EventedAnalyzer {
         //
 
         try {
-          const compiled = this.compilerService.cache(
-            fileUri, doc.text, doc.version);
+          const compiled = this.compilerService.cache(fileUri, doc.text, doc.version);
           const lines = doc.text.split("\n");
 
           // Lets us know whether the user has typed something like
           // `foo` or `foo.` (i.e., whether they are "dotting into"
           // `foo`). In the case of the latter, we will want to emit
           // suggestions from the members of `foo`.
-          const lastCharIsDot =
-            lines[cursorLoc.line-1][cursorLoc.column-2] === ".";
+          const lastCharIsDot = lines[cursorLoc.line - 1][cursorLoc.column - 2] === ".";
 
           let node: ast.Node | null = null;
           if (service.isParsedDocument(compiled)) {
             // Success case. The document parses, and we can offer
             // suggestions from a well-formed document.
 
-            return this.completionsFromParse(
-              fileUri, compiled, cursorLoc, lastCharIsDot);
+            return this.completionsFromParse(fileUri, compiled, cursorLoc, lastCharIsDot);
           } else {
             const lastParse = this.compilerService.getLastSuccess(fileUri);
             if (lastParse == null) {
               return [];
             }
 
-            return this.completionsFromFailedParse(
-              fileUri, compiled, lastParse, cursorLoc, lastCharIsDot);
+            return this.completionsFromFailedParse(fileUri, compiled, lastParse, cursorLoc, lastCharIsDot);
           }
         } catch (err) {
           console.log(err);
@@ -242,9 +268,7 @@ export class Analyzer implements EventedAnalyzer {
     const rest = compiled.parse.parseError.rest;
     const restEnd = rest.loc.end;
 
-    if (rest == null) {
-      throw new Error(`INTERNAL ERROR: rest should never be null`);
-    } else if (
+    if (
       !cursorLoc.inRange(rest.loc) &&
       !(restEnd.line === cursorLoc.line && cursorLoc.column === restEnd.column + 1)
     ) {
@@ -289,8 +313,7 @@ export class Analyzer implements EventedAnalyzer {
     }
 
     // Step 2, try to find the "best guess".
-    let foundNode = getNodeAtPositionFromAst(
-      lastParse.parse, cursorLoc);
+    let foundNode = getNodeAtPositionFromAst(lastParse.parse, cursorLoc);
     if (ast.isAnalyzableFindFailure(foundNode)) {
       if (foundNode.terminalNodeOnCursorLine != null) {
         foundNode = foundNode.terminalNodeOnCursorLine;
@@ -350,7 +373,7 @@ export class Analyzer implements EventedAnalyzer {
       ast.isResolvedFunction(resolved) ||
       ast.isResolvedFreeVar(resolved) ||
       (!lastCharIsDot && ast.isIndexedObjectFields(resolved.value) ||
-      ast.isNode(resolved.value))
+        ast.isNode(resolved.value))
     ) {
       // Our most complex case. One of two things is true:
       //
@@ -446,7 +469,7 @@ export class Analyzer implements EventedAnalyzer {
     line = node.prettyPrint();
 
     return <editor.LanguageString[]>[
-      {language: 'jsonnet', value: line},
+      { language: 'jsonnet', value: line },
       commentText,
     ];
   }
@@ -518,14 +541,14 @@ export const getNodeAtPositionFromAst = (
 }
 
 const envToSuggestions = (env: ast.Environment): editor.CompletionInfo[] => {
-    return env.map((value: ast.LocalBind | ast.FunctionParam, key: string) => {
-      // TODO: Fill in documentation later. This might involve trying
-      // to parse function comment to get comments about different
-      // parameters.
-      return <editor.CompletionInfo>{
-        label: key,
-        kind: "Variable",
-      };
-    })
+  return env.map((value: ast.LocalBind | ast.FunctionParam, key: string) => {
+    // TODO: Fill in documentation later. This might involve trying
+    // to parse function comment to get comments about different
+    // parameters.
+    return <editor.CompletionInfo>{
+      label: key,
+      kind: "Variable",
+    };
+  })
     .toArray();
 }

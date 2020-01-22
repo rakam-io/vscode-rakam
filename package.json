@@ -1,10 +1,10 @@
 {
 	"displayName": "Rakam Data Modeling",
-	"homepage": "https://github.com/rakam/vscode-rakam/blob/master/README.md",
+	"homepage": "https://github.com/rakam-io/vscode-rakam/blob/master/README.md",
 	"icon": "images/square.png",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rakam/vscode-rakam.git"
+		"url": "https://github.com/rakam-io/vscode-rakam.git"
 	},
 	"name": "rakam-data-modeling",
 	"preview": true,
@@ -20,8 +20,7 @@
 	"license": "SEE LICENSE IN 'LICENSE' file",
 	"activationEvents": [
 		"onLanguage:jsonnet",
-		"onCommand:jsonnet.previewToSide",
-		"onCommand:jsonnet.preview"
+		"onCommand:jsonnet.previewToSide"
 	],
 	"categories": [
 		"Programming Languages",
@@ -31,6 +30,10 @@
 		"jsonValidation": [
 			{
 				"fileMatch": "_config.json",
+				"url": "./json-schema/config.schema.json"
+			},
+			{
+				"fileMatch": "*.model.json",
 				"url": "./json-schema/model.schema.json"
 			}
 		],
@@ -43,9 +46,22 @@
 		"commands": [
 			{
 				"command": "jsonnet.previewToSide",
-				"title": "Jsonnet: Open Preview to the Side"
+				"title": "Compile and Preview Jsonnet",
+				"icon": {
+					"dark": "./media/compile_dark.svg",
+					"light": "./media/compile_light.svg"
+				}
 			}
 		],
+		"menus": {
+			"editor/title": [
+				{
+					"when": "editorLangId == jsonnet",
+					"command": "jsonnet.previewToSide",
+					"group": "navigation"
+				}
+			]
+		},
 		"configuration": {
 			"properties": {
 				"jsonnet.executablePath": {
@@ -101,7 +117,8 @@
 		]
 	},
 	"dependencies": {
-		"ajv": "^6.10.2",
+		"ajv": "^6.11.0",
+		"better-ajv-errors": "^0.6.7",
 		"filepath": "^1.1.0",
 		"immutable": "^3.8.1",
 		"js-yaml": "^3.0.0",
@@ -121,8 +138,12 @@
 		"vscode": "^1.1.36"
 	},
 	"engines": {
-		"vscode": "^1.25.x"
+		"vscode": "^1.39.x"
 	},
+	"extensionDependencies": [
+		"igorsbitnev.error-gutters",
+		"usernamehw.errorlens"
+	],
 	"main": "./out/client/extension",
 	"scripts": {
 		"compile": "tsc -watch -p ./ --outDir ./out",
@@ -130,5 +151,10 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "node ./node_modules/vscode/bin/test",
 		"vscode:prepublish": "tsc -p ./ --outDir ./out"
+	},
+	"__metadata": {
+		"id": "42f4e659-8dda-4182-8162-8cba5820b26e",
+		"publisherDisplayName": "rakam",
+		"publisherId": "18ddab1f-a5fa-4f20-9bda-dd0a00214447"
 	}
 }

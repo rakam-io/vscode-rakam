@@ -12,14 +12,14 @@
       <Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.18.x" />
       <Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="" />
       
-        <Property Id="Microsoft.VisualStudio.Services.Links.Source" Value="https://github.com/heptio/vscode-jsonnet.git" />
-        <Property Id="Microsoft.VisualStudio.Services.Links.Getstarted" Value="https://github.com/heptio/vscode-jsonnet.git" />
+        <Property Id="Microsoft.VisualStudio.Services.Links.Source" Value="https://github.com/rakam-io/vscode-rakam.git" />
+        <Property Id="Microsoft.VisualStudio.Services.Links.Getstarted" Value="https://github.com/rakam-io/vscode-rakam.git" />
         
-          <Property Id="Microsoft.VisualStudio.Services.Links.GitHub" Value="https://github.com/heptio/vscode-jsonnet.git" />
+          <Property Id="Microsoft.VisualStudio.Services.Links.GitHub" Value="https://github.com/rakam-io/vscode-rakam.git />
         
       
       
-      <Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="https://github.com/heptio/vscode-jsonnet/blob/master/README.md" />
+      <Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="https://github.com/rakam-io/vscode-rakam/blob/master/README.md" />
       
       
       <Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />

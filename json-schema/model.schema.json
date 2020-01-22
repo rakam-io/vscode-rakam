@@ -3,9 +3,29 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "The analytics model definition",
     "required": [
-        "version",
-        "name",
-        "from"
+        "name"
+    ],
+    "oneOf": [
+        {
+            "properties": {
+                "target": {
+                    "$ref": "#/definitions/target"
+                }
+            },
+            "required": [
+                "target"
+            ]
+        },
+        {
+            "properties": {
+                "target": {
+                    "$ref": "#/definitions/sql"
+                }
+            },
+            "required": [
+                "sql"
+            ]
+        }
     ],
     "definitions": {
         "hidden": {
@@ -84,7 +104,7 @@
                 "greaterThan"
             ]
         },
-        "fieldType": {
+        "type": {
             "type": "string",
             "enum": [
                 "string",
@@ -120,6 +140,34 @@
                 }
             }
         },
+        "sql": {
+            "type": "string",
+            "title": "The source SQL query of the model",
+            "examples": [
+                "select 1"
+            ]
+        },
+        "target": {
+            "type": "object",
+            "title": "Defines the target table in the database",
+            "required": [
+                "table"
+            ],
+            "properties": {
+                "database": {
+                    "type": "string",
+                    "title": "The database of the target table if applicable"
+                },
+                "schema": {
+                    "type": "string",
+                    "title": "The schema of the target table  if applicable"
+                },
+                "table": {
+                    "type": "string",
+                    "title": "The source table of the model"
+                }
+            }
+        },
         "filters": {
             "type": "array",
             "items": {
@@ -127,13 +175,14 @@
                 "title": "The list of filters",
                 "required": [
                     "dimension",
-                    "operator"
+                    "operator",
+                    "valueType"
                 ],
                 "allOf": [
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "const": "string"
                                 }
                             }
@@ -152,7 +201,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "enum": [
                                         "integer",
                                         "double",
@@ -175,7 +224,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "const": "timestamp"
                                 }
                             }
@@ -194,7 +243,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "const": "date"
                                 }
                             }
@@ -213,7 +262,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "const": "boolean"
                                 }
                             }
@@ -232,7 +281,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "const": "time"
                                 }
                             }
@@ -251,7 +300,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "valueType": {
                                     "pattern": "^array+"
                                 }
                             }
@@ -275,15 +324,8 @@
                             "campaign_name"
                         ]
                     },
-                    "fieldType": {
-                        "$ref": "#/definitions/fieldType"
-                    },
-                    "connector": {
-                        "default": "and",
-                        "enum": [
-                            "and",
-                            "or"
-                        ]
+                    "valueType": {
+                        "$ref": "#/definitions/type"
                     },
                     "value": {
                         "title": "The value that will be passed to the operator. Note that if operator is not isSet or isNotSet, this value is required."
@@ -293,13 +335,9 @@
         }
     },
     "properties": {
-        "version": {
+        "name": {
             "type": "string",
-            "title": "The version of the model schema"
-        },
-        "from": {
-            "type": "string",
-            "title": "The target table in your database"
+            "minLength": 1
         },
         "label": {
             "$ref": "#/definitions/label"
@@ -423,24 +461,39 @@
             "additionalProperties": {
                 "type": "object",
                 "additionalProperties": false,
-                "oneOf": [
+                "allOf": [
                     {
-                        "required": [
-                            "column"
-                        ]
-                    },
-                    {
-                        "required": [
-                            "sql"
-                        ]
+                        "if": {
+                            "properties": {
+                                "aggregation": {
+                                    "not": {
+                                        "const": "count"
+                                    }
+                                }
+                            }
+                        },
+                        "then": {
+                            "oneOf": [
+                                {
+                                    "required": [
+                                        "column"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "sql"
+                                    ]
+                                }
+                            ]
+                        }
                     }
-                ],
-                "required": [
-                    "aggregation"
                 ],
                 "properties": {
                     "label": {
                         "$ref": "#/definitions/label"
+                    },
+                    "type": {
+                        "$ref": "#/definitions/type"
                     },
                     "description": {
                         "$ref": "#/definitions/description"
@@ -490,6 +543,24 @@
                 }
             }
         },
+        "mappings": {
+            "type": "object",
+            "examples": [
+                {
+                    "eventTimestamp": "_time"
+                }
+            ],
+            "properties": {
+                "eventTimestamp": {
+                    "description": "The timestamp dimension for time-series data. It enforces the date filter in segmentation page and also being used by funnel and retention reports.",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The dimension that points to user identifier for event models. Used by funnel and retention reports.",
+                    "type": "string"
+                }
+            }
+        },
         "dimensions": {
             "type": "object",
             "examples": [
@@ -503,7 +574,7 @@
                 "type": "object",
                 "dependencies": {
                     "postOperations": [
-                        "fieldType"
+                        "type"
                     ]
                 },
                 "oneOf": [
@@ -522,7 +593,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "type": {
                                     "const": "timestamp"
                                 }
                             }
@@ -554,7 +625,7 @@
                     {
                         "if": {
                             "properties": {
-                                "fieldType": {
+                                "type": {
                                     "not": {
                                         "const": "timestamp"
                                     }
@@ -564,8 +635,7 @@
                         "then": {
                             "properties": {
                                 "postOperations": {
-                                    "type": "array",
-                                    "enum": []
+                                    "type": "null"
                                 }
                             }
                         }
@@ -606,8 +676,8 @@
                         "title": "If the dimension can used for pivoting",
                         "default": true
                     },
-                    "fieldType": {
-                        "$ref": "#/definitions/fieldType"
+                    "type": {
+                        "$ref": "#/definitions/type"
                     },
                     "postOperations": {
                         "type": "array"
@@ -618,5 +688,7 @@
                 }
             }
         }
-    }
+    },
+    "additionalProperties": false,
+    "errorMessage": "The model definition must be an object with required property `name` and either `target` or `sql` property that defines the data source"
 }
