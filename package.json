@@ -127,6 +127,33 @@
 	"engines": {
 		"vscode": "^1.25.x"
 	},
+	"menus": {
+		"explorer/context": [
+			{
+				"command": "jsonnet.previewToSide",
+				"when": "editorLangId == jsonnet",
+				"group": "navigation"
+			}
+		],
+		"commandPalette": [
+			{
+				"when": "editorLangId == jsonnet",
+				"command": "jsonnet.previewToSide"
+			}
+		],
+		"editor/title": [
+			{
+				"when": "editorLangId == jsonnet",
+				"command": "jsonnet.previewToSide",
+				"alt": "jsonnet.previewToSide",
+				"group": "navigation"
+			}
+		]
+	},
+	"extensionDependencies": [
+		"igorsbitnev.error-gutters",
+		"usernamehw.errorlens"
+	],
 	"main": "./out/client/extension",
 	"scripts": {
 		"compile": "tsc -watch -p ./ --outDir ./out",

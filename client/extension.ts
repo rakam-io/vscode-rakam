@@ -7,7 +7,6 @@ import * as fs from 'fs';
 import ajv from 'ajv';
 import * as vs from 'vscode';
 import * as yaml from "js-yaml";
-import betterAjvErrors from 'better-ajv-errors';
 import * as im from 'immutable';
 import * as lexical from '../compiler/lexical-analysis/lexical';
 
@@ -83,26 +82,16 @@ namespace register {
   export const previewCommands = (context: vs.ExtensionContext, diagProvider: jsonnet.DiagnosticProvider): void => {
     const activePanels = new Map<string, vs.TextEditor>();
 
-    // const docProvider = new jsonnet.DocumentProvider();
+    const docProvider = new jsonnet.DocumentProvider();
     // Subscribe to document updates. This allows us to detect (e.g.)
     // when a document was saved.
-    // context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider(jsonnet.PREVIEW_SCHEME, docProvider));
+    context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider(jsonnet.PREVIEW_SCHEME, docProvider));
 
-    // Expand Jsonnet, register errors as diagnostics with vscode, and
-    // generate preview if a preview tab is open.
-    // const preview = async (doc: vs.TextDocument): Promise<void> => {
-    //   if (doc.languageId === "jsonnet") {
     //     const result = docProvider.cachePreview(doc);
     //     if (jsonnet.isRuntimeFailure(result)) {
     //       diagProvider.report(doc.uri, result.error);
     //     } else {
     //       diagProvider.clear(doc.uri);
-    //       const jsonResult = JSON.parse(result);
-    //       const isValid = await validate(jsonResult);
-    //       if (!isValid) {
-    //         const b = betterAjvErrors(schemaDefinition, jsonResult, validate.errors, { format: 'js' })
-    //         console.log(b);
-    //       }
 
     const previewExisting = async (doc: vs.TextDocument): Promise<void> => {
       if (doc.uri.scheme === 'file' && doc.fileName.endsWith(".jsonnet")) {
@@ -111,8 +100,12 @@ namespace register {
           return
         }
 
-        let newText
+        let newText: string
         try {
+          // we need to save before executing the compiler
+          if (doc.isDirty) {
+            doc.save()
+          }
           newText = compileJsonnet(doc.uri.fsPath)
         } catch (error) {
           alert.couldNotRenderJsonnet(error.message)
@@ -124,11 +117,11 @@ namespace register {
         var fullRange = new vs.Range(firstLine.range.start, lastLine.range.end);
         const fullRange2 = new vs.Range(0, 0, doc.lineCount, doc.eol)
 
-        panel.edit(edit => edit.replace(fullRange, newText))
-        // const textEdit = new vs.TextEdit(fullRange, newText)
-        // const edit = new vs.WorkspaceEdit()
-        // edit.set(panel.document.uri, [textEdit])
-        // vs.workspace.applyEdit(edit)
+        // panel.edit(edit => edit.replace(fullRange, newText))
+        const textEdit = new vs.TextEdit(fullRange, newText)
+        const edit = new vs.WorkspaceEdit()
+        edit.set(panel.document.uri, [textEdit])
+        vs.workspace.applyEdit(edit)
       }
     }
 
@@ -137,7 +130,8 @@ namespace register {
     context.subscriptions.push(vs.workspace.onDidOpenTextDocument(previewExisting));
     context.subscriptions.push(vs.workspace.onDidCloseTextDocument(doc => {
       // TODO: not working
-      if (doc.uri.scheme === jsonnet.PREVIEW_SCHEME) {
+      if (doc.isUntitled) {
+        activePanels.has
         delete activePanels[""]
       }
     }));
@@ -159,8 +153,8 @@ namespace register {
       // compile to the same path with json extension
       const fsPath = editor.document.uri.fsPath
       const filePath = rakamRecipe.convertExt(fsPath, "jsonnet", "json")
-      // let uri = vs.Uri.file(filePath).with({ scheme: jsonnet.PREVIEW_SCHEME });
-      let uri = vs.Uri.file(filePath).with({ scheme: 'untitled' });
+      let uri = vs.Uri.file(filePath).with({ scheme: jsonnet.PREVIEW_SCHEME });
+      // let uri = vs.Uri.file(filePath).with({ scheme: 'untitled' });
 
       if (activePanels[fsPath] == null) {
         const ff = await vs.workspace.openTextDocument(uri)

@@ -25,7 +25,7 @@
             "required": [
                 "sql"
             ]
-        },
+        }
     ],
     "definitions": {
         "hidden": {
@@ -543,6 +543,24 @@
                 }
             }
         },
+        "mappings": {
+            "type": "object",
+            "examples": [
+                {
+                    "eventTimestamp": "_time"
+                }
+            ],
+            "properties": {
+                "eventTimestamp": {
+                    "description": "The timestamp dimension for time-series data. It enforces the date filter in segmentation page and also being used by funnel and retention reports.",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The dimension that points to user identifier for event models. Used by funnel and retention reports.",
+                    "type": "string"
+                }
+            }
+        },
         "dimensions": {
             "type": "object",
             "examples": [
@@ -670,5 +688,7 @@
                 }
             }
         }
-    }
+    },
+    "additionalProperties": false,
+    "errorMessage": "The model definition must be an object with required property `name` and either `target` or `sql` property that defines the data source"
 }

@@ -268,9 +268,7 @@ export class Analyzer implements EventedAnalyzer {
     const rest = compiled.parse.parseError.rest;
     const restEnd = rest.loc.end;
 
-    if (rest == null) {
-      throw new Error(`INTERNAL ERROR: rest should never be null`);
-    } else if (
+    if (
       !cursorLoc.inRange(rest.loc) &&
       !(restEnd.line === cursorLoc.line && cursorLoc.column === restEnd.column + 1)
     ) {

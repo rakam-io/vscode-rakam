@@ -98,15 +98,16 @@ connection.onHover(position => {
   return analyzer.onHover(fileUri, positionToLocation(position));
 });
 
-connection.onCompletion(position => {
-  return analyzer
-    .onComplete(position.textDocument.uri, positionToLocation(position))
-    .then<server.CompletionItem[]>(
-      completions => completions.map(completionInfoToCompletionItem));
+connection.onCompletion(async position => {
+  const completions = await analyzer
+    .onComplete(position.textDocument.uri, positionToLocation(position));
+  return completions.map(completionInfoToCompletionItem);
 });
 // Prevent the language server from complaining that
 // `onCompletionResolve` handle is not implemented.
-connection.onCompletionResolve(item => item);
+connection.onCompletionResolve(item => {
+  return item
+});
 
 // Listen on the connection
 connection.listen();
@@ -125,8 +126,10 @@ export const initializer = (
       completionProvider: {
         resolveProvider: true,
         triggerCharacters: ["."],
+
       },
       hoverProvider: true,
+      experimental: true
     }
   }
 }
