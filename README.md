@@ -1,3 +1,6 @@
+# NOT MAINTAINED ANYMORE
+We switched from VSCode extension to an embedded IDE on app.rakam.io for writing data models so this extension is not maintained anymore. Feel free to fork and maintain the extension if you wish so.
+
 # Rakam Recipe Support for Visual Studio Code
 
 The extension adds support for jsonnet files in VSCode and lets you write the Rakam Recipes in a convenient way.
